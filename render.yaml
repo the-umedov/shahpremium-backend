@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: shahpremium-backend
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_PREFIX
+        value: /api/v1
+      - key: DATABASE_URL
+        sync: false # Render Postgres "Internal Database URL"ni shu yerga qo'ying
+      - key: CORS_ORIGIN
+        sync: false # frontend'ning Render URL'i (https://...onrender.com)
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
