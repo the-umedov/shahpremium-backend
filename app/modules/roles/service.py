@@ -5,7 +5,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.models import Permission, Role, RolePermission
+from app.models.models import Permission, Role, RolePermission, UserRole
 from app.modules.roles.schemas import CreateRoleRequest, UpdateRoleRequest
 
 
@@ -18,6 +18,10 @@ def _serialize(r: Role) -> dict:
         "is_system": r.is_system,
         "count": {"users": len(r.users), "permissions": len(r.permissions)},
         "permissions": [{"id": rp.permission.id, "key": rp.permission.key} for rp in r.permissions],
+        "users": [
+            {"id": ur.user.id, "email": ur.user.email}
+            for ur in sorted(r.users, key=lambda ur: ur.user.email)
+        ],
     }
 
 
@@ -26,7 +30,7 @@ async def list_roles(db: AsyncSession) -> list[dict]:
         await db.execute(
             select(Role)
             .options(
-                selectinload(Role.users),
+                selectinload(Role.users).selectinload(UserRole.user),
                 selectinload(Role.permissions).selectinload(RolePermission.permission),
             )
             .order_by(Role.key.asc())
@@ -40,7 +44,7 @@ async def _get_role(db: AsyncSession, role_id: str) -> Role:
         await db.execute(
             select(Role)
             .options(
-                selectinload(Role.users),
+                selectinload(Role.users).selectinload(UserRole.user),
                 selectinload(Role.permissions).selectinload(RolePermission.permission),
             )
             .where(Role.id == role_id)
