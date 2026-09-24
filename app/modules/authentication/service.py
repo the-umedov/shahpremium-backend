@@ -8,8 +8,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.enums import RoleKey, UserType, VerificationTokenType
-from app.models.models import Role, RolePermission, User, UserProfile, UserRole
+from app.models.enums import ClientType, RoleKey, UserType, VerificationTokenType
+from app.models.models import Client, Role, RolePermission, User, UserProfile, UserRole
 from app.modules.authentication.schemas import (
     ChangePasswordRequest,
     LoginRequest,
@@ -100,6 +100,20 @@ async def register(db: AsyncSession, dto: RegisterRequest) -> dict:
     await db.flush()
     db.add(UserProfile(user_id=user.id, first_name=dto.first_name, last_name=dto.last_name))
     db.add(UserRole(user_id=user.id, role_id=client_role.id))
+    # CLIENT roli uchun barcha ma'lumotlar (ishlar, to'lovlar...) mijoz profili orqali
+    # cheklanadi — profilsiz foydalanuvchi har joyda "Mijoz profili topilmadi" (403) olardi.
+    from app.modules.clients.service import generate_client_code
+
+    db.add(
+        Client(
+            user_id=user.id,
+            code=generate_client_code(),
+            full_name=f"{dto.first_name} {dto.last_name}".strip(),
+            client_type=ClientType.INDIVIDUAL,
+            email=dto.email,
+            phone=dto.phone,
+        )
+    )
     await db.commit()
 
     await verification.create_token(db, user.id, VerificationTokenType.EMAIL_VERIFY)

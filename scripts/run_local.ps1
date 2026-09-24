@@ -95,7 +95,18 @@ if (Listening 5433) {
     Ok "ishga tushdi"
 }
 
-# ---- 4. Backend (port 4000) ----
+# ---- 4. Baza migratsiyalari (yangi jadvallar, viloyat/tumanlar) ----
+# Idempotent — har safar tez o'tadi, faqat yetishmayotgan narsalarni qo'shadi.
+Step "Baza yangilanishlari (migratsiyalar)"
+Push-Location $backend
+# Rus/o'zbek tilidagi Windows konsolida (cp866/cp1251) "—" kabi belgilar Python'ni yiqitmasin.
+$env:PYTHONIOENCODING = "utf-8"
+try {
+    & (Join-Path $backend ".venv\Scripts\python.exe") -m scripts.init_production_db | ForEach-Object { Write-Host "    $_" }
+    if ($LASTEXITCODE -ne 0) { throw "Migratsiya xato bilan tugadi" }
+} finally { Pop-Location }
+
+# ---- 5. Backend (port 4000) ----
 Step "Backend (http://127.0.0.1:4000)"
 if (Listening 4000) {
     Ok "allaqachon ishlab turibdi"
@@ -111,7 +122,7 @@ if (Listening 4000) {
     Ok "ishga tushdi"
 }
 
-# ---- 5. Frontend (port 8080) ----
+# ---- 6. Frontend (port 8080) ----
 Step "Frontend (http://localhost:8080)"
 if (Listening 8080) {
     Ok "allaqachon ishlab turibdi"

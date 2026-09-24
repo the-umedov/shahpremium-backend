@@ -39,7 +39,7 @@ def _base36_upper(n: int) -> str:
     return "".join(reversed(out))
 
 
-def _generate_code() -> str:
+def generate_client_code() -> str:
     return f"CL-{_base36_upper(int(time.time() * 1000))}"
 
 
@@ -302,7 +302,7 @@ async def get_client(db: AsyncSession, client_id: str, user: AuthUser) -> dict:
 
 async def create_client(db: AsyncSession, dto: CreateClientRequest, user: AuthUser) -> dict:
     client = Client(
-        code=_generate_code(),
+        code=generate_client_code(),
         full_name=dto.full_name,
         client_type=dto.client_type or ClientType.INDIVIDUAL,
         phone=dto.phone,

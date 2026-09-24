@@ -275,6 +275,20 @@ class Region(UUIDPKMixin, TimestampMixin, Base):
     offices: Mapped[list["Office"]] = relationship(back_populates="region")
     clients: Mapped[list["Client"]] = relationship(back_populates="region")
     users: Mapped[list["User"]] = relationship(back_populates="region")
+    districts: Mapped[list["District"]] = relationship(
+        back_populates="region", cascade="all, delete-orphan", order_by="District.name"
+    )
+
+
+class District(UUIDPKMixin, TimestampMixin, Base):
+    """Jadval: `districts` (db/migrations/001_districts.sql) — asl Prisma sxemasida yo'q edi."""
+
+    __tablename__ = "districts"
+
+    name: Mapped[str] = mapped_column(String(150))
+    region_id: Mapped[str] = mapped_column("regionId", ForeignKey("regions.id", ondelete="CASCADE"))
+
+    region: Mapped["Region"] = relationship(back_populates="districts")
 
 
 class Office(UUIDPKMixin, TimestampMixin, Base):
