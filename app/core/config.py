@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     jwt_refresh_secret: str
     jwt_refresh_ttl: int = 1209600
 
+    # Audit jurnali shuncha kundan eski yozuvlarni avtomatik o'chiradi (0 = o'chirmaydi).
+    audit_retention_days: int = 3
+
     storage_endpoint: str | None = None
     storage_region: str = "us-east-1"
     storage_bucket: str | None = None

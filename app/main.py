@@ -1,3 +1,7 @@
+import asyncio
+import contextlib
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -46,10 +50,25 @@ configure_logging()
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    from app.modules.audit.retention import retention_loop
+
+    task = asyncio.create_task(retention_loop())
+    try:
+        yield
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+
+
 app = FastAPI(
     title="ShahPremium API",
     description="Yuridik SaaS platforma REST API",
     version="1.0",
+    lifespan=lifespan,
 )
 
 app.state.limiter = limiter
