@@ -78,7 +78,11 @@ if (Listening 5433) {
     $pgData = Join-Path $pg "data"
     $pgLog = Join-Path $pg "server.log"
     try {
-        & (Join-Path $pgBin "pg_ctl.exe") -D $pgData -o "-p 5433" -l $pgLog -w start | Out-Null
+        # pg_ctl alohida (yashirin) oynada ishga tushiriladi: agar u shu PowerShell oynasiga
+        # bog'lansa, oyna yopilgach baza yangi ulanishlarda 0xC0000142 bilan yiqiladi.
+        $pgProc = Start-Process -FilePath (Join-Path $pgBin "pg_ctl.exe") -WindowStyle Hidden -PassThru `
+            -ArgumentList "-D", "`"$pgData`"", "-o", "`"-p 5433`"", "-l", "`"$pgLog`"", "-w", "start"
+        $null = $pgProc.WaitForExit(90000)
     } catch {
         # Windows "Smart App Control" imzosiz pg_ctl.exe'ni bloklaydi, lekin
         # postgres.exe'ga ruxsat beradi — shu holatda serverni to'g'ridan-to'g'ri ishga tushiramiz.
